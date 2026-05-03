@@ -17,7 +17,7 @@ A beginner-friendly guide to running AgriGuard AI on your computer from scratch.
 
 ## What is AgriGuard AI?
 
-AgriGuard AI is a crop disease detection app for smallholder farmers in Karachi, Sindh. You take a photo of a sick crop, and the app tells you what disease it has, the local weather conditions, and exactly how to treat it. It also generates a downloadable PDF report.
+AgriGuard AI is a crop disease detection app for smallholder farmers in Karachi, Sindh and Punjab. You take a photo of a sick crop, and the app tells you what disease it has, the local weather conditions, and exactly how to treat it. It also generates a downloadable PDF report.
 
 **Aligned with:**
 - SDG 1 — No Poverty
@@ -296,4 +296,4 @@ Ctrl + C
 
 ---
 
-*AgriGuard AI · Hackathon Build · SDG 1 & SDG 2*
+*AgriGuard AI · Hackathon Build 2026· SDG 1 & SDG 2*
