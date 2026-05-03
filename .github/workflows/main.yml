@@ -1,0 +1,60 @@
+name: Streamlit App CI/CD → Hugging Face Spaces
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # ── 1. CI: build & smoke-test ──────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          pip install streamlit
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run Smoke Test
+        run: |
+          streamlit run app.py --server.headless true &
+          PID=$!
+          sleep 10
+          kill $PID
+
+  # ── 2. CD: deploy to Hugging Face Spaces ───────────────────────────────────
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Install Git LFS and migrate binary history
+        run: |
+          git lfs install
+          git lfs migrate import \
+            --include="*.ttf,*.otf,*.woff,*.png,*.jpg,*.jpeg,*.gif,*.bin,*.pkl" \
+            --everything
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_API_TOKEN: ${{ secrets.HF_API_TOKEN }}
+        run: |
+          git push --force \
+            https://fatimaaisha002:$HF_API_TOKEN@huggingface.co/spaces/fatimaaisha002/agriguard-ai \
+            main
