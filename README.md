@@ -295,7 +295,7 @@ Ctrl + C
 | Deployment | ngrok |
 
 
- This Project Deploy My An Other Teammate View Link  : https://fatimaaisha002-agriguard-ai.hf.space
+ This Project Build My An Other Teammate View Link  : https://fatimaaisha002-agriguard-ai.hf.space
 ---
 
 *AgriGuard AI · Hackathon Build 2026· SDG 1 & SDG 2*
