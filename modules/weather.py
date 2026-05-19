@@ -3,13 +3,11 @@
 # ─────────────────────────────────────────────────────────────
 
 import json
-import os
 from dotenv import load_dotenv
 import requests
-from config import USE_REAL_WEATHER_API, WEATHER_CITY, WEATHER_COUNTRY
+from config import USE_REAL_WEATHER_API, WEATHER_CITY, WEATHER_COUNTRY, OPENWEATHER_API_KEY
 
 load_dotenv()
-OPENWEATHER_API_KEY=os.getenv("b58b4fa298fca72bc2438258de81bb6aY")
 
 def get_weather_context() -> dict:
     """
@@ -22,6 +20,15 @@ def get_weather_context() -> dict:
 
 
 def _call_openweather() -> dict:
+    if not OPENWEATHER_API_KEY:
+        return {
+            "condition": "Weather unavailable",
+            "humidity_pct": 0,
+            "rain_expected": False,
+            "advice": "OpenWeatherMap API key is missing in deployment secrets.",
+            "temperature_c": 0,
+        }
+
     url = (
         f"https://api.openweathermap.org/data/2.5/weather"
         f"?q={WEATHER_CITY},{WEATHER_COUNTRY}&appid={OPENWEATHER_API_KEY}&units=metric"

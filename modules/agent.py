@@ -3,11 +3,10 @@ import requests
 import json
 import re
 
-GROQ_API_KEY = os.getenv("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")
 GROQ_MODEL   = "llama-3.3-70b-versatile"
 GROQ_URL     = "https://api.groq.com/openai/v1/chat/completions"
 
-from config import USE_REAL_FLOWISE_AGENT, WEATHER_REGION_LABEL
+from config import USE_REAL_FLOWISE_AGENT, WEATHER_REGION_LABEL, GROQ_API_KEY
 
 # ─────────────────────────────────────────────────────────────
 # MULTILINGUAL SUPPORT
@@ -106,6 +105,13 @@ def get_treatment_plan(disease_name: str, weather: dict,
 # ─────────────────────────────────────────────────────────────
 def _call_groq(disease_name: str, weather: dict,
                language_code: str = "en") -> dict:
+    if not GROQ_API_KEY:
+        return {
+            "treatment":   "Groq API key is missing in deployment secrets.",
+            "precautions": "",
+            "urgency":     "",
+            "rag_source":  "",
+        }
 
     # Build language instruction for the prompt
     if language_code == "en":
