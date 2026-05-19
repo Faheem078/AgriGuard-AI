@@ -6,9 +6,9 @@
 import os
 
 # ── API Keys ──────────────────────────────────────────
-HF_TOKEN           = os.environ.get("HF_TOKEN", "")
-OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "")
-GROQ_API_KEY       = os.environ.get("GROQ_API_KEY", "")
+HF_TOKEN           = os.environ.get("HF_TOKEN", "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")
+OPENWEATHER_API_KEY = os.environ.get("OPENWEATHER_API_KEY", "b58b4fa298fca72bc2438258de81bb6a")
+GROQ_API_KEY       = os.environ.get("GROQ_API_KEY", "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")
 
 # ── Feature Flags ─────────────────────────────────────────────
 # Set to True once the corresponding module is live
