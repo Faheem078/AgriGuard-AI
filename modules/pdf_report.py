@@ -23,6 +23,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
+from config import WEATHER_REGION_LABEL
 
 # ── Optional RTL support ──────────────────────────────────────
 try:
@@ -146,7 +147,7 @@ def _header(canvas, doc):
     canvas.drawCentredString(
         A4[0] / 2, A4[1] - 26*mm,
         f"Generated: {datetime.now().strftime('%d %b %Y, %I:%M %p')}"
-        "  |  Region: Karachi, Sindh",
+        f"  |  Region: {WEATHER_REGION_LABEL}",
     )
     canvas.restoreState()
 
@@ -194,7 +195,7 @@ def generate_report(vision: dict, agent: dict, weather: dict,
         ("Confidence", f"{int(vision.get('confidence', 0) * 100)}%"),
     ], st["section"], GREEN_MID, lang_code="en")
 
-    _section(story, "Weather Context (Karachi)", [
+    _section(story, f"Weather Context ({WEATHER_REGION_LABEL})", [
         ("Condition",   weather.get("condition")),
         ("Humidity",    f"{weather.get('humidity_pct', 'N/A')}%"),
         ("Temperature", f"{weather.get('temperature_c', 'N/A')} C"),

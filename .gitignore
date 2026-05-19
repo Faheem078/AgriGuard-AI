@@ -23,4 +23,5 @@ venv/
 Thumbs.db
 
 # Streamlit
+.streamlit/secrets.toml
 .streamlit/"fonts/" 

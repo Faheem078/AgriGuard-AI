@@ -2,17 +2,24 @@ import streamlit as st
 import sys, os
 sys.path.insert(0, os.path.dirname(__file__))
 
-from modules.vision     import classify_disease
+from modules.vision     import classify_disease, warmup_vision_model
 from modules.weather    import get_weather_context
 from modules.agent      import get_treatment_plan, estimate_yield_loss, SUPPORTED_LANGUAGES
 from modules.pdf_report import generate_report
 from modules.chatbot    import get_chatbot_response, get_mock_chatbot_response, QUICK_QUESTIONS
-from config             import USE_REAL_VISION_MODEL, USE_REAL_FLOWISE_AGENT, USE_REAL_WEATHER_API, USE_REAL_GROQ_CHATBOT
+from config             import USE_REAL_VISION_MODEL, USE_REAL_FLOWISE_AGENT, USE_REAL_WEATHER_API, USE_REAL_GROQ_CHATBOT, WEATHER_REGION_LABEL
 
 # ─────────────────────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AgriGuard AI", page_icon="🌿", layout="wide")
+
+if USE_REAL_VISION_MODEL:
+    try:
+        warmup_vision_model()
+    except Exception:
+        # Keep app startup resilient; classify_disease handles detailed errors per request.
+        pass
 
 # ── Chatbot session state ──────────────────────────────────────
 if "chat_history" not in st.session_state:
@@ -157,7 +164,7 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("**Mission**  \nInstant AI crop diagnostics for smallholder farmers.")
     st.markdown("**🎯 SDGs**  \nSDG 1 · SDG 2 · SDG 12 · SDG 13")
-    st.markdown("**📍 Region**  \nKarachi, Sindh, Pakistan")
+    st.markdown(f"**📍 Region**  \n{WEATHER_REGION_LABEL}")
     st.markdown("---")
 
     st.markdown("**🌐 Output Language**")
@@ -259,6 +266,16 @@ if active_image:
         with st.spinner("Identifying disease…"):
             vision = classify_disease(active_image)
 
+        if not isinstance(vision, dict):
+            vision = {
+                "disease_name": "Error: invalid vision response",
+                "confidence": 0.0,
+                "crop_type": "Unknown",
+                "severity": "Unknown",
+                "error": True,
+                "message": "Vision module returned an unexpected response.",
+            }
+
         # ── ✅ NEW: Check if image is not a plant ─────────────
         if vision.get("error") and vision.get("disease_name") in ("Not a Plant", "Uncertain"):
             st.markdown("</div>", unsafe_allow_html=True)  # close card
@@ -296,7 +313,7 @@ if active_image:
         """, unsafe_allow_html=True)
 
         # ── Step 2: Weather ───────────────────────────────────
-        with st.spinner("Checking Karachi weather…"):
+        with st.spinner(f"Checking {WEATHER_REGION_LABEL} weather…"):
             weather = get_weather_context()
 
         rain_badge = "<span class='badge badge-warn'>Rain Expected</span>" if weather.get("rain_expected") \
@@ -306,7 +323,7 @@ if active_image:
         <div class='result-row'>
             <div class='result-icon'>🌦️</div>
             <div>
-                <div class='result-label'>Weather · Karachi</div>
+                <div class='result-label'>Weather · {WEATHER_REGION_LABEL}</div>
                 <div class='result-value'>
                     {weather.get('condition')} · {weather.get('humidity_pct')}% humidity · {weather.get('temperature_c')}°C
                     &nbsp;{rain_badge}

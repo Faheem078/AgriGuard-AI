@@ -123,11 +123,13 @@ GROQ_API_KEY=gsk_your_groq_key_here
 Open the terminal in VS Code:
 - Press **Ctrl + `** (backtick key, top left of keyboard)
 
+
 Then paste this and press Enter:
 
 ```bash
 pip install streamlit fpdf2 requests python-dotenv Pillow groq langchain
 ```
+.\.venv\Scripts\python.exe -m pip install transformers torch pillow
 
 Wait for everything to install. It takes 2-5 minutes.
 
@@ -180,8 +182,8 @@ winget install Ngrok.Ngrok
 
 **Add your token:**
 ```bash
-ngrok config add-authtoken your-token-here
-```
+ngrok authtoken
+
 
 **Open a second terminal** (Terminal → New Terminal in VS Code) and run:
 ```bash

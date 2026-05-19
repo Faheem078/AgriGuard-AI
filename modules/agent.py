@@ -7,7 +7,7 @@ GROQ_API_KEY = os.getenv("gsk_dhrMDgkf6yKpb1a5MCtmWGdyb3FYuqqETcRr4zH3as0sqazbAo
 GROQ_MODEL   = "llama-3.3-70b-versatile"
 GROQ_URL     = "https://api.groq.com/openai/v1/chat/completions"
 
-from config import USE_REAL_FLOWISE_AGENT
+from config import USE_REAL_FLOWISE_AGENT, WEATHER_REGION_LABEL
 
 # ─────────────────────────────────────────────────────────────
 # MULTILINGUAL SUPPORT
@@ -121,7 +121,7 @@ def _call_groq(disease_name: str, weather: dict,
 
     prompt = f"""{lang_instruction}You are an expert agricultural advisor.
 Disease detected: {disease_name}
-Weather in Karachi: {weather.get('condition')}, \
+Weather in {WEATHER_REGION_LABEL}: {weather.get('condition')}, \
 humidity {weather.get('humidity_pct')}%, \
 rain expected: {weather.get('rain_expected')}.
 
