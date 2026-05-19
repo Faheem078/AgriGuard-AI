@@ -9,7 +9,7 @@ import requests
 from config import USE_REAL_WEATHER_API, WEATHER_CITY, WEATHER_COUNTRY
 
 load_dotenv()
-OPENWEATHER_API_KEY=os.getenv("OPENWEATHER_API_KEY")
+OPENWEATHER_API_KEY=os.getenv("b58b4fa298fca72bc2438258de81bb6aY")
 
 def get_weather_context() -> dict:
     """
