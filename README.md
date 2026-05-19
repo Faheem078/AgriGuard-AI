@@ -297,7 +297,7 @@ Ctrl + C
 | Deployment | ngrok |
 
 
- This Project link :[ https://fatimaaisha002-agriguard-ai.hf.space](https://agriguard-ai-e6xhdxlawokgufyt8xuwcs.streamlit.app/)
+ This Project link :(https://agriguard-ai-e6xhdxlawokgufyt8xuwcs.streamlit.app/)
 ---
 
 *AgriGuard AI · Hackathon Build 2026· SDG 1 & SDG 2*
