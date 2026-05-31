@@ -304,4 +304,4 @@ Ctrl + C
  This Project link :(https://agriguard-ai-e6xhdxlawokgufyt8xuwcs.streamlit.app/)
 ---
 
-*AgriGuard AI · Faheem Tech Build 2026· SDG 1 & SDG 2*
+*AgriGuard AI · Build Faheem Tech  2026· SDG 1 & SDG 2*
