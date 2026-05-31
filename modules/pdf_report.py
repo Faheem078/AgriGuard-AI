@@ -60,11 +60,14 @@ def _ensure_fonts():
         pdfmetrics.registerFont(TTFont("NotoArabic-Bold", _FONT_PATH))
     _FONTS_LOADED = True
 
-def _font(bold=False) -> str:
+def _latin_font(bold=False) -> str:
+    return "Helvetica-Bold" if bold else "Helvetica"
+
+def _rtl_font(bold=False) -> str:
     _ensure_fonts()
     if os.path.isfile(_FONT_PATH):
         return "NotoArabic-Bold" if bold else "NotoArabic"
-    return "Helvetica-Bold" if bold else "Helvetica"
+    return _latin_font(bold)
 
 
 # ── Text helpers ──────────────────────────────────────────────
@@ -88,10 +91,9 @@ def _prepare(text, lang_code="en") -> str:
 
 # ── Paragraph styles ──────────────────────────────────────────
 def _ps(name, size=10, bold=False, color=None, align=0, space_after=2):
-    _ensure_fonts()
     return ParagraphStyle(
         name,
-        fontName=_font(bold),
+        fontName=_latin_font(bold),
         fontSize=size,
         leading=size * 1.45,
         textColor=color or TEXT_GREY,
@@ -100,11 +102,17 @@ def _ps(name, size=10, bold=False, color=None, align=0, space_after=2):
     )
 
 def _styles():
+    rtl_font = _rtl_font(False)
     return {
         "section": _ps("Sec", size=11, bold=True,  color=GREEN_MID, space_after=0),
         "weather": _ps("Wea", size=11, bold=True,  color=GOLD,      space_after=0),
         "label":   _ps("Lbl", size=9,  bold=True,  color=TEXT_GREY),
         "value":   _ps("Val", size=9,  bold=False, color=TEXT_GREY, space_after=4),
+        "value_rtl": ParagraphStyle(
+            "ValRtl",
+            parent=_ps("ValBase", size=9, bold=False, color=TEXT_GREY, space_after=4),
+            fontName=rtl_font,
+        ),
     }
 
 
@@ -114,11 +122,12 @@ def _section(story, title, rows, title_style, accent, lang_code="en"):
     story.append(HRFlowable(width="100%", thickness=0.5,
                              color=accent, spaceAfter=4))
     st = _styles()
+    value_style = st["value_rtl"] if lang_code in RTL_LANG_CODES else st["value"]
     data = []
     for label, value in rows:
         data.append([
             Paragraph(f"{label}:", st["label"]),
-            Paragraph(_prepare(value, lang_code), st["value"]),
+            Paragraph(_prepare(value, lang_code), value_style),
         ])
 
     tbl = Table(data, colWidths=[38*mm, 132*mm])
@@ -138,11 +147,11 @@ def _header(canvas, doc):
     canvas.saveState()
     canvas.setFillColor(GREEN_DEEP)
     canvas.rect(0, A4[1] - 32*mm, A4[0], 32*mm, fill=1, stroke=0)
-    canvas.setFont(_font(bold=True), 18)
+    canvas.setFont(_latin_font(bold=True), 18)
     canvas.setFillColor(white)
     canvas.drawCentredString(A4[0] / 2, A4[1] - 18*mm,
                              "AgriGuard AI - Crop Diagnostic Report")
-    canvas.setFont(_font(), 9)
+    canvas.setFont(_latin_font(), 9)
     canvas.setFillColor(HexColor("#c8e6c9"))
     canvas.drawCentredString(
         A4[0] / 2, A4[1] - 26*mm,
@@ -154,7 +163,7 @@ def _header(canvas, doc):
 
 def _footer(canvas, doc):
     canvas.saveState()
-    canvas.setFont(_font(), 8)
+    canvas.setFont(_latin_font(), 8)
     canvas.setFillColor(TEXT_SOFT)
     canvas.drawCentredString(A4[0] / 2, 14*mm,
                              "AgriGuard AI  |  SDG 1  |  SDG 2  |  SDG 13")
@@ -171,12 +180,6 @@ def _both(canvas, doc):
 # ── Public entry point ────────────────────────────────────────
 def generate_report(vision: dict, agent: dict, weather: dict,
                     lang_code: str = "en") -> bytes:
-
-    # ── DEBUG (remove these 3 lines once working) ─────────────
-    print("Font path:", _FONT_PATH)
-    print("Font exists:", os.path.isfile(_FONT_PATH))
-    print("RTL available:", RTL_AVAILABLE)
-    # ──────────────────────────────────────────────────────────
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
