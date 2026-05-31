@@ -1,7 +1,5 @@
 <img width="960" height="504" alt="Screenshot 2026-05-21 071210" src="https://github.com/user-attachments/assets/d2abb3f0-769f-43f8-a57a-9d2076c59803" />
 <img width="960" height="504" alt="Screenshot 2026-05-21 071413" src="https://github.com/user-attachments/assets/6edadb90-4756-4c18-9ef6-74943c3bac68" />
-
-
 ---
 title: AgriGuard AI
 emoji: 🌿
