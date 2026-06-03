@@ -13,7 +13,7 @@ HF_API_TOKEN = os.environ.get("HF_API_TOKEN") or os.environ.get("HF_TOKEN")
 
 from config import USE_REAL_VISION_MODEL, VISION_MODEL_ID
 
-from transformers import pipeline, MobileNetV2ImageProcessor, AutoModelForImageClassification
+# Defer importing heavy HuggingFace/transformers components until needed
 
 
 def _torch_is_available() -> bool:
@@ -34,6 +34,8 @@ def _load_disease_pipeline():
         raise RuntimeError(
             "PyTorch is required for the live vision model. Install the packages in requirements.txt and restart the app."
         )
+    # Import transformers objects lazily to avoid heavy startup time
+    from transformers import pipeline, MobileNetV2ImageProcessor, AutoModelForImageClassification
 
     if HF_API_TOKEN:
         try:
@@ -68,6 +70,30 @@ def _prepare_image(image_file) -> Image.Image:
     return img.convert("RGB")
 
 
+def _is_likely_plant(img: Image.Image) -> bool:
+    """Heuristic to detect whether an image contains plant/leaf content.
+    Uses HSV green-pixel ratio when numpy is available, otherwise falls back
+    to simple channel means via PIL ImageStat.
+    """
+    try:
+        import numpy as np
+        hsv = np.array(img.convert("HSV"))
+        if hsv.ndim != 3 or hsv.shape[2] < 3:
+            return False
+        h = hsv[:, :, 0]
+        s = hsv[:, :, 1]
+        v = hsv[:, :, 2]
+        # green hue roughly between 35-100 (OpenCV/HSL-ish); require some saturation/value
+        green_mask = ((h >= 35) & (h <= 100)) & (s >= 40) & (v >= 30)
+        green_pct = float(green_mask.mean())
+        return green_pct >= 0.03  # require >=3% green-ish pixels
+    except Exception:
+        from PIL import ImageStat
+        stat = ImageStat.Stat(img.convert("RGB"))
+        r_mean, g_mean, b_mean = stat.mean
+        return (g_mean > r_mean and g_mean > b_mean and g_mean >= 60)
+
+
 def warmup_vision_model() -> None:
     """Eagerly warm the cached model. Safe to call at app startup."""
     if USE_REAL_VISION_RUNTIME:
@@ -77,9 +103,26 @@ def warmup_vision_model() -> None:
 def classify_disease(image_file) -> dict:
     if not USE_REAL_VISION_RUNTIME:
         return _mock_vision_response()
-
     try:
         img = _prepare_image(image_file)
+
+        # Quick plant detection to avoid misclassifying humans/objects as crop diseases
+        try:
+            if not _is_likely_plant(img):
+                return {
+                    "disease_name": "Not a Plant",
+                    "confidence": 0.0,
+                    "crop_type": "Unknown",
+                "severity": "Unknown",
+                "error": True,
+                "is_plant": False,
+                "message": "Image does not appear to contain a plant. Try a close-up photo of a leaf or crop.",
+            }
+
+        except Exception:
+            # If the heuristic fails, continue to model inference rather than blocking.
+            pass
+
         clf_pipe = _load_disease_pipeline()
         results = clf_pipe(img, top_k=5)
 
@@ -88,10 +131,12 @@ def classify_disease(image_file) -> dict:
                 "disease_name": "Error: empty model response",
                 "confidence": 0.0,
                 "crop_type": "Unknown",
-                "severity": "Unknown",
-                "error": True,
-                "message": "Model did not return predictions.",
-            }
+            "severity": "Unknown",
+            "error": True,
+            "is_plant": True,
+            "message": "Model did not return predictions.",
+        }
+
 
         top = results[0] if isinstance(results[0], dict) else {}
         label = top.get("label", "Unknown")
@@ -104,8 +149,10 @@ def classify_disease(image_file) -> dict:
                 "crop_type": "Unknown",
                 "severity": "N/A",
                 "error": True,
+                "is_plant": True,
                 "message": "Could not confidently identify a plant disease. Please upload a clearer, closer photo.",
             }
+
 
         return {
             "disease_name": label,
@@ -124,7 +171,9 @@ def classify_disease(image_file) -> dict:
             mock["confidence"] = 0.0
             mock["crop_type"] = "Unknown"
             mock["severity"] = "Unknown"
+            mock["is_plant"] = True
             return mock
+
         raise
     except Exception as e:
         return {
@@ -133,8 +182,10 @@ def classify_disease(image_file) -> dict:
             "crop_type": "Unknown",
             "severity": "Unknown",
             "error": True,
+            "is_plant": True,
             "message": str(e),
         }
+
 
 
 def _extract_crop(label: str) -> str:
