@@ -16,7 +16,9 @@ st.set_page_config(page_title="AgriGuard AI", page_icon="🌿", layout="wide")
 
 if USE_REAL_VISION_MODEL:
     try:
-        warmup_vision_model()
+        # Warm the vision model in a background thread to avoid blocking Streamlit startup.
+        import threading
+        threading.Thread(target=warmup_vision_model, daemon=True).start()
     except Exception:
         # Keep app startup resilient; classify_disease handles detailed errors per request.
         pass
@@ -277,7 +279,8 @@ if active_image:
             }
 
         # ── ✅ NEW: Check if image is not a plant ─────────────
-        if vision.get("error") and vision.get("disease_name") in ("Not a Plant", "Uncertain"):
+        if vision.get("is_plant") is False:
+
             st.markdown("</div>", unsafe_allow_html=True)  # close card
             st.markdown(f"""
             <div class="invalid-image-banner">
